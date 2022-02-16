@@ -1,27 +1,11 @@
-# Simple HTTPD Server Example
+# esp8266_http_server_template
+A messy template for an http server that can be hosted in an esp8266 without any external hardware (except for a host computer to compile and flash the device)
+This template is a more thoughtful version of the original "http_server/simple" template featured in the freeRTOS examples folder. It contains a mutable size vector library, a json builder and parser, aswell as a sqlite3 database library for data persistency.
 
-The Example consists of HTTPD server demo with demostration of URI handling :
-    1. URI \hello for GET command returns "Hello World!" message
-    2. URI \echo for POST command echoes back the POSTed message
+Note: The template uses SPIFFS for its file handlers and sqlite connetion, so before flashig your device remember to check the partition table and menuconfig, remember aswell to change the SSID and password values to connect to your WIFI.
 
-* Configure the project using "make menuconfig" and goto :
-    * Example Configuration ->
-        1. WIFI SSID: WIFI network to which your PC is also connected to.
-        2. WIFI Password: WIFI password
-
-* In order to test the HTTPD server persistent sockets demo :
-    1. compile and burn the firmware "make flash"
-    2. run "make monitor" and note down the IP assigned to your ESP module. The default port is 80
-    3. test the example :
-        * run the test script : "python2 scripts/client.py \<IP\> \<port\> \<MSG\>"
-            * the provided test script first does a GET \hello and displays the response
-            * the script does a POST to \echo with the user input \<MSG\> and displays the response
-        * or use curl (asssuming IP is 192.168.43.130):
-            1. "curl 192.168.43.130:80/hello"  - tests the GET "\hello" handler
-            2. "curl -X POST --data-binary @anyfile 192.168.43.130:80/echo > tmpfile"
-                * "anyfile" is the file being sent as request body and "tmpfile" is where the body of the response is saved
-                * since the server echoes back the request body, the two files should be same, as can be confirmed using : "cmp anyfile tmpfile"
-            3. "curl -X PUT -d "0" 192.168.43.130:80/ctrl" - disable /hello and /echo handlers
-            4. "curl -X PUT -d "1" 192.168.43.130:80/ctrl" -  enable /hello and /echo handlers
-
-See the README.md file in the upper level 'examples' directory for more information about examples.
+*Libraries used:
+1.json-parser: https://github.com/json-parser/json-parser
+2.json-builder: https://github.com/json-parser/json-builder
+3.c-vector: https://github.com/Mashpoe/c-vector
+4.esp32-idf-sqlite3: https://github.com/siara-cc/esp32-idf-sqlite3
