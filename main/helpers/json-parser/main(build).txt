@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "json.c"
+
+int main(){
+
+    json_value* arr = json_object_new(0);
+
+    json_object_push(arr, "Ass", json_string_new("Cheeks"));
+
+    json_value* data = json_object_new(0);
+    json_object_push(data, "Butt", json_string_new("Cheeks"));
+
+    json_object_push(arr, "data", data);
+
+    char * buf = malloc(json_measure(arr));
+    json_serialize(buf, arr);
+    printf("%s\n", buf);
+    ///Outputs { "Ass": "Cheeks", "data": { "Butt": "Cheeks" } }
+    /*
+    {
+        "Ass": "Cheeks",
+        "data": {
+            "Butt": "Cheeks"
+        }
+    }
+    */
+
+    return 0;
+}

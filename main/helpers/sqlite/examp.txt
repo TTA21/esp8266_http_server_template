@@ -1,0 +1,138 @@
+/* SPIFFS filesystem example.
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include "esp_err.h"
+#include "esp_log.h"
+#include "esp_spiffs.h"
+#include "esp_timer.h"
+#include "sqlite3.h"
+#include "helpers/json-parser/json.c"
+
+const char* TAG = "example";
+const char* BASE_PATH = "";
+
+static int callback(void *rows, int argc, char **argv, char **azColName) {
+    json_value* row = json_object_new(0);
+    for (int i = 0; i<argc; i++){
+        json_object_push(row, azColName[i], json_string_new(argv[i] ? argv[i] : "NULL"));
+    }
+    if(rows != NULL)
+        json_array_push((json_value*)rows, row);
+    return 0;
+}
+
+int db_open(const char *filename, sqlite3 **db) {
+    int rc = sqlite3_open(filename, db);
+    if (rc) {
+        ESP_LOGE(TAG, "Can't open database: %s\n", sqlite3_errmsg(*db));
+        return rc;
+    }
+    return rc;
+}
+
+
+int db_exec(sqlite3 *db, const char *sql, json_value* rows) {
+    char *zErrMsg = 0;
+    int rc = sqlite3_exec(db, sql, callback, (void*)rows, &zErrMsg);
+    if (rc != SQLITE_OK) {
+        ESP_LOGE(TAG, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    return rc;
+}
+
+
+void app_main(void)
+{
+    
+    ESP_LOGI(TAG, "Initializing SPIFFS");
+    
+    esp_vfs_spiffs_conf_t conf = {
+      .base_path = BASE_PATH,
+      .partition_label = NULL,
+      .max_files = 5,
+      .format_if_mount_failed = true
+    };
+    
+    // Use settings defined above to initialize and mount SPIFFS filesystem.
+    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+    esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+    if (ret != ESP_OK) {
+        if (ret == ESP_FAIL) {
+            ESP_LOGE(TAG, "Failed to mount or format filesystem");
+        } else if (ret == ESP_ERR_NOT_FOUND) {
+            ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+        } else {
+            ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+        }
+        return;
+    }
+    
+    ///////////////////
+    sqlite3 *db1;
+    int rc;
+    
+    // remove existing file
+    unlink("/spiffs/test1.db");
+    unlink("/spiffs/test2.db");
+
+    sqlite3_initialize();
+
+    if (db_open("/spiffs/test1.db", &db1))
+        return;
+
+    rc = db_exec(db1, "CREATE TABLE test1 (id INTEGER, content, content2);", NULL);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(db1);
+        return;
+    }
+
+    rc = db_exec(db1, "INSERT INTO test1 VALUES (1, 'Hello, World from test1', 'Goodbye, World from test1');", NULL);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(db1);
+        return;
+    }
+
+    rc = db_exec(db1, "INSERT INTO test1 VALUES (2, 'Hello, World from test2', 'Goodbye, World from test2');", NULL);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(db1);
+        return;
+    }
+
+    rc = db_exec(db1, "INSERT INTO test1 VALUES (3, 'Hello, World from test3', 'Goodbye, World from test3');", NULL);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(db1);
+        return;
+    }
+
+    json_value* rows = json_array_new(0);
+    rc = db_exec(db1, "SELECT * FROM test1", rows);
+    if (rc != SQLITE_OK) {
+        sqlite3_close(db1);
+        return;
+    }///json getting reset to an array after being properly built, find why
+    char * buf = malloc(json_measure(rows));
+    json_serialize(buf, rows);
+    printf("%s\n", buf);
+    
+
+    sqlite3_close(db1);
+
+    // All done, unmount partition and disable SPIFFS
+    esp_vfs_spiffs_unregister(NULL);
+    ESP_LOGI(TAG, "SPIFFS unmounted");
+
+    ///////////////////
+}

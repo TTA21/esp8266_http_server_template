@@ -1,0 +1,22 @@
+#include <stdio.h>
+#include "vec.c"
+
+int main(){
+    char** char_vec = vector_create();
+
+    vector_add(&char_vec, "asd");
+    vector_add(&char_vec, "qwe");
+    vector_add(&char_vec, "zxc");
+
+    for(size_t I = 0 ; I < vector_size(char_vec) ; I++){
+        printf("String: %s \n", char_vec[I]);
+    }printf("\n\n");
+
+    vector_insert(&char_vec, 1, "123");
+    for(size_t I = 0 ; I < vector_size(char_vec) ; I++){
+        printf("String: %s \n", char_vec[I]);
+    }
+
+
+    return 0;
+}

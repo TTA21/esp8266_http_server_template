@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <string.h>
+#include "json.c"
+
+//gcc main.c -lm
+
+void test1(){
+    const char* json_string = "{\"asd\":\"qwe\"}";
+    size_t len = strlen(json_string);
+
+    printf("JSON: %s\n", json_string);
+
+    json_value* json = json_parse(json_string, len);
+
+    if (json == NULL){
+        printf("Unable to parse data\n");
+        return;
+    }
+
+    printf("Data name: %s \n", json->u.object.values->name);
+    printf("Data value: %s \n", json->u.object.values->value->u.string.ptr);
+    json_value_free(json);
+}
+
+void test2(){
+    /*
+    [
+        {
+            "asd": "qwe",
+            "xcv": 123,
+            "data": {
+                "sample": "gold",
+                "sample2": 999
+            }
+        }
+    ]
+    */
+
+    const char* json_string = "[{\"asd\": \"qwe\",\"xcv\": 123,\"data\":{\"sample\":\"gold\",\"sample2\": 999}}]";
+    size_t len = strlen(json_string);
+
+    printf("JSON: %s\n", json_string);
+    json_value* json = json_parse(json_string, len);
+
+    if (json == NULL){
+        printf("Unable to parse data\n");
+        return 0;
+    }
+
+    printf("Initial array size: %u \n", json->u.array.length); /// [ ... ]
+    printf("First Object size: %u \n\n", json->u.array.values[0]->u.object.length); /// [{ "asd": ... "data": ... }]
+
+    printf("First Object item name: %s \n", json->u.array.values[0]->u.object.values[0].name);
+    printf("First Object item value: %s \n\n", json->u.array.values[0]->u.object.values[0].value->u.string.ptr);
+
+    printf("Second Object item name: %s \n", json->u.array.values[0]->u.object.values[1].name);
+    printf("Second Object item value (wrong type attempt): %s \n", json->u.array.values[0]->u.object.values[1].value->u.string.ptr);
+    printf("Second Object item value : %li \n\n", json->u.array.values[0]->u.object.values[1].value->u.integer);
+
+    printf("Third Object item name: %s \n", json->u.array.values[0]->u.object.values[2].name);
+    printf("Third Object size: %u \n", json->u.array.values[0]->u.object.values[2].value->u.object.length);
+    printf("Third Object's first item name: %s \n", json->u.array.values[0]->u.object.values[2].value->u.object.values[0].name);
+    printf("Third Object's first item value: %s \n", json->u.array.values[0]->u.object.values[2].value->u.object.values[0].value->u.string.ptr);
+    printf("Third Object's second item name: %s \n", json->u.array.values[0]->u.object.values[2].value->u.object.values[1].name);
+    printf("Third Object's second item value: %li \n", json->u.array.values[0]->u.object.values[2].value->u.object.values[1].value->u.integer);
+}
+
+int main(){
+    
+    test1();
+    printf("\n\n");
+    test2();
+    
+    
+    return 0;
+}
