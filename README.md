@@ -5,7 +5,7 @@ This template is a more thoughtful version of the original "http_server/simple" 
 Note: The template uses SPIFFS for its file handlers and sqlite connetion, so before flashig your device remember to check the partition table and menuconfig, remember aswell to change the SSID and password values to connect to your WIFI.
 
 * Libraries used:
-1. json-parser: https://github.com/json-parser/json-parser
-2. json-builder: https://github.com/json-parser/json-builder
-3. c-vector: https://github.com/Mashpoe/c-vector
-4. esp32-idf-sqlite3: https://github.com/siara-cc/esp32-idf-sqlite3
+  * json-parser: https://github.com/json-parser/json-parser
+  * json-builder: https://github.com/json-parser/json-builder
+  * c-vector: https://github.com/Mashpoe/c-vector
+  * esp32-idf-sqlite3: https://github.com/siara-cc/esp32-idf-sqlite3
